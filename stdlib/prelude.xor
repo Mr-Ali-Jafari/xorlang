@@ -1,0 +1,36 @@
+// XorLang Standard Prelude
+// Loaded automatically by the interpreter if found near the executable.
+
+// Re-export IO
+func println(x) { print(x); };
+
+// Time module
+class Time {
+  func now() { return time_now(); }
+  func nowMs() { return time_ms(); }
+  func wait(seconds) { return sleep(seconds); }
+};
+
+// HTTP module
+class Http {
+  func get(url) { return http_get(url); }
+  func status(url) { return http_get_status(url); }
+};
+
+// Math conveniences (basic)
+class Math {
+  func add(a, b) { return a + b; }
+  func sub(a, b) { return a - b; }
+  func mul(a, b) { return a * b; }
+  func div(a, b) { return a / b; }
+};
+
+// Assertions
+func assert(cond, msg) {
+  if (cond == false) { print("Assertion failed:", msg); }
+};
+
+func assertEqual(a, b, msg) {
+  if (a == b) { return; }
+  print("Assertion failed:", msg);
+}; 
