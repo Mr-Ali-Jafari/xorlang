@@ -1,0 +1,270 @@
+// XorLang String Standard Library
+// String manipulation utilities using built-in functions.
+
+class String {
+    // Note: This class provides static-like utility functions for the primitive string type.
+    // It does not wrap strings in objects.
+
+    func length(str) {
+        return len(str);
+    }
+    
+    func charAt(str, index) {
+        return __str_get__(str, index);
+    }
+    
+    func substring(str, start, end) {
+        var result = "";
+        var i = start;
+        var strLen = len(str);
+        if (end > strLen) {
+            end = strLen;
+        }
+        while (i < end) {
+            result = result + __str_get__(str, i);
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    func indexOf(str, searchStr) {
+        var strLen = len(str);
+        var searchLen = len(searchStr);
+        
+        if (searchLen > strLen) {
+            return -1;
+        }
+        
+        var i = 0;
+        while (i <= strLen - searchLen) {
+            var found = true;
+            var j = 0;
+            while (j < searchLen) {
+                if (__str_get__(str, i + j) != __str_get__(searchStr, j)) {
+                    found = false;
+                    break;
+                }
+                j = j + 1;
+            }
+            if (found) {
+                return i;
+            }
+            i = i + 1;
+        }
+        return -1;
+    }
+    
+    func contains(str, searchStr) {
+        return String.indexOf(str, searchStr) >= 0;
+    }
+    
+    func startsWith(str, prefix) {
+        var prefixLen = len(prefix);
+        if (prefixLen > len(str)) {
+            return false;
+        }
+        var i = 0;
+        while (i < prefixLen) {
+            if (__str_get__(str, i) != __str_get__(prefix, i)) {
+                return false;
+            }
+            i = i + 1;
+        }
+        return true;
+    }
+    
+    func endsWith(str, suffix) {
+        var strLen = len(str);
+        var suffixLen = len(suffix);
+        if (suffixLen > strLen) {
+            return false;
+        }
+        var offset = strLen - suffixLen;
+        var i = 0;
+        while (i < suffixLen) {
+            if (__str_get__(str, offset + i) != __str_get__(suffix, i)) {
+                return false;
+            }
+            i = i + 1;
+        }
+        return true;
+    }
+    
+    func replace(str, oldStr, newStr) {
+        var result = "";
+        var i = 0;
+        var strLen = len(str);
+        var oldLen = len(oldStr);
+        
+        if (oldLen == 0) {
+            return str; // Avoid infinite loop
+        }
+
+        while (i < strLen) {
+            var substr = String.substring(str, i, i + oldLen);
+            if (substr == oldStr) {
+                result = result + newStr;
+                i = i + oldLen;
+            } else {
+                result = result + __str_get__(str, i);
+                i = i + 1;
+            }
+        }
+        return result;
+    }
+    
+    func split(str, delimiter) {
+        var result = new Array();
+        var current = "";
+        var i = 0;
+        var strLen = len(str);
+        var delimLen = len(delimiter);
+
+        if (delimLen == 0) {
+            // Split into characters if delimiter is empty
+            while (i < strLen) {
+                result.push(__str_get__(str, i));
+                i = i + 1;
+            }
+            return result;
+        }
+        
+        while (i < strLen) {
+            var substr = String.substring(str, i, i + delimLen);
+            if (substr == delimiter) {
+                result.push(current);
+                current = "";
+                i = i + delimLen;
+            } else {
+                current = current + __str_get__(str, i);
+                i = i + 1;
+            }
+        }
+        result.push(current);
+        return result;
+    }
+    
+    func trim(str) {
+        var start = 0;
+        var strLen = len(str);
+        var end = strLen - 1;
+        
+        // Find start of non-whitespace
+        while (start <= end) {
+            var char = __str_get__(str, start);
+            if (char == " " || char == "\t" || char == "\n" || char == "\r") {
+                 start = start + 1;
+            } else {
+                break;
+            }
+        }
+        
+        // Find end of non-whitespace
+        while (end >= start) {
+            var char = __str_get__(str, end);
+            if (char == " " || char == "\t" || char == "\n" || char == "\r") {
+                end = end - 1;
+            } else {
+                break;
+            }
+        }
+        
+        if (start > end) {
+            return "";
+        }
+        
+        return String.substring(str, start, end + 1);
+    }
+    
+    func toUpperCase(str) {
+        var result = "";
+        var i = 0;
+        var strLen = len(str);
+        while (i < strLen) {
+            var char = __str_get__(str, i);
+            var code = ord(char);
+            if (code >= 97 && code <= 122) { // 'a' to 'z'
+                result = result + chr(code - 32);
+            } else {
+                result = result + char;
+            }
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    func toLowerCase(str) {
+        var result = "";
+        var i = 0;
+        var strLen = len(str);
+        while (i < strLen) {
+            var char = __str_get__(str, i);
+            var code = ord(char);
+            if (code >= 65 && code <= 90) { // 'A' to 'Z'
+                result = result + chr(code + 32);
+            } else {
+                result = result + char;
+            }
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    func reverse(str) {
+        var result = "";
+        var i = len(str) - 1;
+        while (i >= 0) {
+            result = result + __str_get__(str, i);
+            i = i - 1;
+        }
+        return result;
+    }
+    
+    func repeat(str, count) {
+        var result = "";
+        var i = 0;
+        while (i < count) {
+            result = result + str;
+            i = i + 1;
+        }
+        return result;
+    }
+    
+    func padLeft(str, length, padChar) {
+        var strLen = len(str);
+        if (strLen >= length) {
+            return str;
+        }
+        var padding = String.repeat(padChar, length - strLen);
+        return padding + str;
+    }
+    
+    func padRight(str, length, padChar) {
+        var strLen = len(str);
+        if (strLen >= length) {
+            return str;
+        }
+        var padding = String.repeat(padChar, length - strLen);
+        return str + padding;
+    }
+    
+    func isEmpty(str) {
+        return len(str) == 0;
+    }
+    
+    func isWhitespace(str) {
+        var i = 0;
+        var strLen = len(str);
+        if (strLen == 0) {
+            return false;
+        }
+        while (i < strLen) {
+            var char = __str_get__(str, i);
+            if (char != " " && char != "\t" && char != "\n" && char != "\r") {
+                return false;
+            }
+            i = i + 1;
+        }
+        return true;
+    }
+}

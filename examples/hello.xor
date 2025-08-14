@@ -1,0 +1,35 @@
+// XorLang Hello World Example
+
+var message = "Hello, XorLang!";
+print(message);
+
+// Function example
+func greet(name) {
+    return "Hello, " + name + "!";
+}
+
+print(greet("World"));
+
+// Class example
+class Calculator {
+    func add(a, b) {
+        return a + b;
+    }
+    
+    func multiply(a, b) {
+        return a * b;
+    }
+}
+
+var calc = Calculator;
+print("5 + 3 =", calc.add(5, 3));
+print("5 * 3 =", calc.multiply(5, 3));
+
+// Control flow example
+for (var i = 1; i <= 3; i = i + 1) {
+    if (i == 2) {
+        print("Number", i, "is even");
+    } else {
+        print("Number", i, "is odd");
+    }
+}

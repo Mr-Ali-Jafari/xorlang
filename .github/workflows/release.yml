@@ -1,0 +1,143 @@
+name: Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            executable_suffix: ""
+            archive_format: tar.gz
+          - os: windows-latest
+            platform: windows
+            executable_suffix: .exe
+            archive_format: zip
+          - os: macos-latest
+            platform: macos
+            executable_suffix: ""
+            archive_format: tar.gz
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Create virtual environment
+      run: |
+        python -m venv env
+        
+    - name: Activate virtual environment (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        source env/bin/activate
+        echo "VIRTUAL_ENV=$VIRTUAL_ENV" >> $GITHUB_ENV
+        echo "$VIRTUAL_ENV/bin" >> $GITHUB_PATH
+
+    - name: Activate virtual environment (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        env\Scripts\activate
+        echo "VIRTUAL_ENV=$env:VIRTUAL_ENV" >> $env:GITHUB_ENV
+        echo "$env:VIRTUAL_ENV\Scripts" >> $env:GITHUB_PATH
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install PyInstaller
+
+    - name: Install project dependencies
+      run: |
+        pip install -e .
+
+    - name: Build executables
+      run: |
+        python build.py
+
+    - name: Create release archive (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        mkdir -p release/xorlang-${{ matrix.platform }}
+        cp dist/xorlang release/xorlang-${{ matrix.platform }}/
+        cp dist/xorlang-ide release/xorlang-${{ matrix.platform }}/
+        cp README.md release/xorlang-${{ matrix.platform }}/
+        cp LICENSE release/xorlang-${{ matrix.platform }}/ || echo "No LICENSE file found"
+        cd release
+        tar -czf xorlang-${{ matrix.platform }}.tar.gz xorlang-${{ matrix.platform }}
+
+    - name: Create release archive (Windows)
+      if: matrix.os == 'windows-latest'
+      run: |
+        mkdir release\xorlang-${{ matrix.platform }}
+        copy dist\xorlang.exe release\xorlang-${{ matrix.platform }}\
+        copy dist\xorlang-ide.exe release\xorlang-${{ matrix.platform }}\
+        copy README.md release\xorlang-${{ matrix.platform }}\
+        if exist LICENSE copy LICENSE release\xorlang-${{ matrix.platform }}\
+        cd release
+        powershell Compress-Archive -Path xorlang-${{ matrix.platform }} -DestinationPath xorlang-${{ matrix.platform }}.zip
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: xorlang-${{ matrix.platform }}
+        path: release/xorlang-${{ matrix.platform }}.${{ matrix.archive_format }}
+
+    - name: Upload to release (if tag)
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: release/xorlang-${{ matrix.platform }}.${{ matrix.archive_format }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build-windows-installer:
+    needs: build
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download Windows artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: xorlang-windows
+        path: artifacts
+
+    - name: Extract Windows executables
+      run: |
+        powershell Expand-Archive -Path artifacts\xorlang-windows.zip -DestinationPath extracted
+        mkdir dist
+        copy extracted\xorlang-windows\xorlang.exe dist\
+        copy extracted\xorlang-windows\xorlang-ide.exe dist\
+
+    - name: Install Inno Setup
+      run: |
+        choco install innosetup -y
+
+    - name: Build Windows installer
+      run: |
+        "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installers\windows_setup.iss
+
+    - name: Upload installer to release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: installers/Output/XorLang-Setup.exe
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

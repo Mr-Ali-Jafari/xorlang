@@ -1,0 +1,79 @@
+// XorLang GUI and HTTP Library Example
+
+// Import the required standard libraries so the interpreter knows where to find
+// the 'Window' class and 'http_get' function.
+import "gui";
+import "http";
+
+// First, let's create a simple window.
+var myWindow = new Window("Quote Fetcher", 400, 300);
+
+// Add a label to display the quote.
+myWindow.addLabel("Click the button to fetch a random quote!", 10, 10);
+
+// This is the function that will be called when the button is clicked.
+func fetchAndDisplayQuote() {
+    print("Fetching quote...");
+
+    // Make an HTTP GET request to a public API.
+    var response = http_get("https://api.quotable.io/random");
+
+    if (response) {
+        // A simple, manual JSON parser.
+        // In a real app, a JSON library would be better.
+        var content = "";
+        var inQuotes = false;
+        var key = "";
+        var i = 0;
+        var len = len(response);
+
+        // Look for the "content" field in the JSON response.
+        while (i < len) {
+            var char = __str_get__(response, i);
+            if (char == '"') {
+                if (inQuotes) {
+                    inQuotes = false;
+                } else {
+                    inQuotes = true;
+                }
+            } else {
+                if (inQuotes) {
+                    key = key + char;
+                } else {
+                    if (key == "content") {
+                        // Found the key, now extract the value.
+                        i = i + 3; // Skip past '"' and ':'
+                        char = __str_get__(response, i);
+                        while (char != '"') {
+                            content = content + char;
+                            i = i + 1;
+                            char = __str_get__(response, i);
+                        }
+                        break; // Exit the loop once content is found.
+                    } else {
+                        // Reset key for next field.
+                        if (char == ',') {
+                            key = "";
+                        }
+                    }
+                }
+            }
+            i = i + 1;
+        }
+
+        print("Quote found:" + content);
+        // We would need a way to update the label's text.
+        // For now, we'll just print it.
+        // Future GUI library update: add a method to update widget properties.
+        myWindow.addLabel("-> " + content, 10, 50);
+
+    } else {
+        print("Failed to fetch quote.");
+    }
+}
+
+// Add a button to trigger the quote fetch.
+myWindow.addButton("Fetch Quote", 10, 250, fetchAndDisplayQuote);
+
+// Show the window.
+myWindow.show();

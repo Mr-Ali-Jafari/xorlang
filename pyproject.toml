@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "xorlang"
+version = "1.0.0"
+description = "XorLang Programming Language Interpreter"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Ali Jafari", email = "your.email@example.com"}
+]
+maintainers = [
+    {name = "Ali Jafari", email = "your.email@example.com"}
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Software Development :: Interpreters",
+    "Topic :: Software Development :: Compilers",
+]
+keywords = ["programming-language", "interpreter", "lexer", "parser", "xorlang"]
+requires-python = ">=3.8"
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=6.0",
+    "black>=21.0",
+    "flake8>=3.8",
+    "mypy>=0.800",
+]
+gui = []  # tkinter is usually included with Python
+
+[project.urls]
+Homepage = "https://github.com/Mr-Ali-Jafari/Xorlang"
+Repository = "https://github.com/Mr-Ali-Jafari/Xorlang"
+Issues = "https://github.com/Mr-Ali-Jafari/Xorlang/issues"
+
+[project.scripts]
+xorlang = "xorlang.cli:main"
+xorlang-ide = "xorlang.ide:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+xorlang = ["stdlib/*.xor"]
+
+[tool.black]
+line-length = 88
+target-version = ['py38']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.mypy]
+python_version = "3.8"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true

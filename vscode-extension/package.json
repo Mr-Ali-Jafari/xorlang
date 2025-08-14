@@ -1,0 +1,35 @@
+{
+    "name": "xorlang",
+    "displayName": "XorLang Support",
+    "description": "Syntax highlighting and language support for XorLang.",
+    "version": "0.0.1",
+    "publisher": "XorLang",
+    "engines": {
+        "vscode": "^1.60.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [
+            {
+                "id": "xorlang",
+                "aliases": [
+                    "XorLang",
+                    "xor"
+                ],
+                "extensions": [
+                    ".xor"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "xorlang",
+                "scopeName": "source.xor",
+                "path": "./syntaxes/xorlang.tmLanguage.json"
+            }
+        ]
+    }
+}

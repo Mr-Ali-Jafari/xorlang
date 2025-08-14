@@ -27,10 +27,10 @@ class Math {
 
 // Assertions
 func assert(cond, msg) {
-  if (cond == false) { print("Assertion failed:", msg); }
+  if (cond == false) { print("Assertion failed:", msg); };
 };
 
 func assertEqual(a, b, msg) {
-  if (a == b) { return; }
+  if (a == b) { return; };
   print("Assertion failed:", msg);
 }; 

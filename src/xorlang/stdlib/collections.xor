@@ -1,0 +1,221 @@
+// XorLang Collections Standard Library
+// Data structures and collection utilities using the class-based object model.
+
+// Note: The 'Array' class is assumed to be a built-in or separately defined class.
+
+// A dynamic list implementation.
+class List {
+    func init() {
+        this.items = new Array();
+    }
+
+    func length() {
+        return this.items.length();
+    }
+
+    func push(item) {
+        this.items.push(item);
+        return this;
+    }
+
+    func get(index) {
+        return this.items.get(index);
+    }
+
+    func set(index, value) {
+        this.items.set(index, value);
+        return this;
+    }
+
+    func pop() {
+        return this.items.pop();
+    }
+
+    func contains(item) {
+        return this.items.contains(item);
+    }
+
+    func indexOf(item) {
+        return this.items.indexOf(item);
+    }
+
+    func forEach(callback) {
+        this.items.forEach(callback);
+    }
+
+    func join(separator) {
+        return this.items.join(separator);
+    }
+
+    func clear() {
+        this.items.clear();
+        return this;
+    }
+}
+
+// Stack (LIFO) implementation.
+class Stack {
+    func init() {
+        this.items = new Array();
+    }
+
+    func push(item) {
+        this.items.push(item);
+        return this;
+    }
+
+    func pop() {
+        return this.items.pop();
+    }
+
+    func peek() {
+        if (this.isEmpty()) {
+            return null;
+        }
+        return this.items.get(this.items.length() - 1);
+    }
+
+    func isEmpty() {
+        return this.items.length() == 0;
+    }
+
+    func size() {
+        return this.items.length();
+    }
+}
+
+// Queue (FIFO) implementation.
+class Queue {
+    func init() {
+        this.items = new Array();
+    }
+
+    func enqueue(item) {
+        this.items.push(item);
+        return this;
+    }
+
+    func dequeue() {
+        if (this.isEmpty()) {
+            return null;
+        }
+        // This is inefficient for a real queue, but works for this implementation.
+        return this.items.removeAt(0);
+    }
+
+    func front() {
+        if (this.isEmpty()) {
+            return null;
+        }
+        return this.items.get(0);
+    }
+
+    func isEmpty() {
+        return this.items.length() == 0;
+    }
+
+    func size() {
+        return this.items.length();
+    }
+}
+
+// Map/Dictionary implementation.
+class Map {
+    func init() {
+        this.keys = new Array();
+        this.values = new Array();
+    }
+
+    func set(key, value) {
+        var index = this.keys.indexOf(key);
+        if (index >= 0) {
+            this.values.set(index, value);
+        } else {
+            this.keys.push(key);
+            this.values.push(value);
+        }
+        return this;
+    }
+
+    func get(key) {
+        var index = this.keys.indexOf(key);
+        if (index >= 0) {
+            return this.values.get(index);
+        }
+        return null;
+    }
+
+    func has(key) {
+        return this.keys.indexOf(key) >= 0;
+    }
+
+    func remove(key) {
+        var index = this.keys.indexOf(key);
+        if (index >= 0) {
+            var value = this.values.get(index);
+            this.keys.removeAt(index);
+            this.values.removeAt(index);
+            return value;
+        }
+        return null;
+    }
+
+    func keys() {
+        return this.keys;
+    }
+
+    func values() {
+        return this.values;
+    }
+
+    func size() {
+        return this.keys.length();
+    }
+
+    func isEmpty() {
+        return this.size() == 0;
+    }
+
+    func clear() {
+        this.keys.clear();
+        this.values.clear();
+        return this;
+    }
+}
+
+// Set implementation.
+class Set {
+    func init() {
+        this.items = new Map();
+    }
+
+    func add(item) {
+        this.items.set(item, true);
+        return this;
+    }
+
+    func has(item) {
+        return this.items.has(item);
+    }
+
+    func remove(item) {
+        return this.items.remove(item);
+    }
+
+    func toArray() {
+        return this.items.keys();
+    }
+    
+    func size() {
+        return this.items.size();
+    }
+
+    func isEmpty() {
+        return this.items.isEmpty();
+    }
+
+    func clear() {
+        this.items.clear();
+        return this;
+    }
+}

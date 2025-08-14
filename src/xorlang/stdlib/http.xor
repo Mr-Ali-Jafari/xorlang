@@ -1,0 +1,13 @@
+// XorLang HTTP Standard Library
+// Provides HTTP client functionality using Python's http.client backend
+
+// Note: The built-in functions http_get and http_get_status are already available
+// This file provides additional convenience functions and documentation
+
+// The http_get function is already available as a built-in
+// Usage: var response = http_get("https://api.example.com/data");
+
+// The http_get_status function is already available as a built-in  
+// Usage: var status = http_get_status("https://api.example.com/data");
+
+// Additional HTTP utility functions can be added here in the future

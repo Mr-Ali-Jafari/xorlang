@@ -1,0 +1,166 @@
+// XorLang Object Standard Library
+// Framework utilities using the class-based object model.
+
+// Event system for framework development
+class EventEmitter {
+    func init() {
+        this.listeners = new Map();
+    }
+
+    func on(event, callback) {
+        if (!this.listeners.has(event)) {
+            this.listeners.set(event, new Array());
+        }
+        var callbacks = this.listeners.get(event);
+        callbacks.push(callback);
+        return this;
+    }
+
+    func emit(event, data) {
+        if (this.listeners.has(event)) {
+            var callbacks = this.listeners.get(event);
+            callbacks.forEach(func(callback, index) {
+                callback(data);
+            });
+        }
+        return this;
+    }
+
+    func off(event, callback) {
+        if (this.listeners.has(event)) {
+            var callbacks = this.listeners.get(event);
+            var index = callbacks.indexOf(callback);
+            if (index >= 0) {
+                var newCallbacks = new Array();
+                callbacks.forEach(func(cb, i) {
+                    if (i != index) {
+                        newCallbacks.push(cb);
+                    }
+                });
+                this.listeners.set(event, newCallbacks);
+            }
+        }
+        return this;
+    }
+
+    func once(event, callback) {
+        func onceCallback(data) {
+            callback(data);
+            this.off(event, onceCallback);
+        }
+        this.on(event, onceCallback);
+        return this;
+    }
+}
+
+// Component system for framework development
+class Component {
+    func init(name, props) {
+        this.name = name;
+        this.props = props;
+        this.state = new Map();
+        this.children = new Array();
+        this.emitter = new EventEmitter();
+    }
+
+    func setState(newState) {
+        this.state = newState;
+        this.emitter.emit("stateChange", newState);
+        return this;
+    }
+
+    func getState() {
+        return this.state;
+    }
+
+    func addChild(child) {
+        this.children.push(child);
+        return this;
+    }
+
+    func removeChild(child) {
+        var index = this.children.indexOf(child);
+        if (index >= 0) {
+            var newChildren = new Array();
+            this.children.forEach(func(c, i) {
+                if (i != index) {
+                    newChildren.push(c);
+                }
+            });
+            this.children = newChildren;
+        }
+        return this;
+    }
+
+    func render() {
+        this.emitter.emit("render", this);
+        return this;
+    }
+}
+
+// Router system for framework development
+class Router {
+    func init() {
+        this.routes = new Map();
+        this.currentRoute = "";
+        this.emitter = new EventEmitter();
+    }
+
+    func addRoute(path, handler) {
+        this.routes.set(path, handler);
+        return this;
+    }
+
+    func navigate(path) {
+        if (this.routes.has(path)) {
+            var oldRoute = this.currentRoute;
+            this.currentRoute = path;
+            var handler = this.routes.get(path);
+            
+            var routeInfo = new Map();
+            routeInfo.set("from", oldRoute);
+            routeInfo.set("to", path);
+
+            this.emitter.emit("routeChange", routeInfo);
+            handler(path);
+        }
+        return this;
+    }
+
+    func getCurrentRoute() {
+        return this.currentRoute;
+    }
+}
+
+// Store/State management for framework development
+class Store {
+    func init(initialState) {
+        this.state = initialState;
+        this.reducers = new Map();
+        this.emitter = new EventEmitter();
+    }
+
+    func getState() {
+        return this.state;
+    }
+
+    func addReducer(action, reducer) {
+        this.reducers.set(action, reducer);
+        return this;
+    }
+
+    func dispatch(action) {
+        if (this.reducers.has(action.type)) {
+            var reducer = this.reducers.get(action.type);
+            var newState = reducer(this.state, action);
+            this.state = newState;
+            this.emitter.emit("stateChange", newState);
+        }
+        return this;
+    }
+
+    func subscribe(callback) {
+        this.emitter.on("stateChange", callback);
+        return this;
+    }
+}
