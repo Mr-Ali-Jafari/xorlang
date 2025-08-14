@@ -62,6 +62,17 @@ else
 - Added VS Code extension and comprehensive documentation"
 fi
 
+# Check if remote is using SSH protocol
+REMOTE_URL=$(git remote get-url origin)
+if [[ $REMOTE_URL == https://* ]]; then
+    echo "⚠️  Warning: Remote is using HTTPS. Converting to SSH for secure authentication..."
+    # Extract repository info from HTTPS URL
+    REPO_PATH=$(echo $REMOTE_URL | sed 's|https://github.com/||')
+    SSH_URL="git@github.com:${REPO_PATH}"
+    git remote set-url origin "$SSH_URL"
+    echo "✅ Remote URL updated to: $SSH_URL"
+fi
+
 # Push changes to remote
 echo "📤 Pushing changes to remote..."
 git push origin main || git push origin master
