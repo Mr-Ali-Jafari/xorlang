@@ -28,31 +28,74 @@ A modern, interpreted programming language designed for simplicity and expressiv
 
 XorLang provides multiple installation methods for Linux systems with comprehensive tooling and desktop integration.
 
-### Quick Installation
+### Prerequisites
+
+- **Linux OS**: Ubuntu 18.04+, Debian 9+, CentOS 7+, or equivalent
+- **Architecture**: x86_64 (64-bit)
+- **Python**: 3.8+ (for building from source)
+- **Privileges**: sudo access for system-wide installation
+- **Disk Space**: ~100MB for installation
+
+### Quick Installation (Recommended)
 
 ```bash
 # Clone the repository
 git clone https://github.com/Mr-Ali-Jafari/Xorlang.git
 cd Xorlang
 
+# Build executables (if needed)
+python build.py
+
 # Run the enhanced installer
 sudo ./install_to_opt.sh
 ```
 
-### Installation Options
+### Installation Methods
 
-- **Enhanced Installer** (Recommended) - Automated installation with desktop integration
-- **Manual Installation** - Step-by-step custom setup
-- **Release Packages** - Pre-built installer packages
+1. **🚀 Enhanced Installer** (Recommended)
+   - Automated installation with desktop integration
+   - Icon support and file associations
+   - Comprehensive logging and backup
+   - Command: `sudo ./install_to_opt.sh`
+
+2. **📦 Release Packages**
+   - Pre-built installer packages
+   - Download from GitHub Releases
+   - Extract and run installer
+
+3. **🔧 Manual Installation**
+   - Custom setup and configuration
+   - Full control over installation process
+   - Suitable for advanced users
 
 📖 **[Complete Installation Guide](INSTALLATION.md)** - Comprehensive installation documentation with troubleshooting
 
 ### Quick Verification
 
 ```bash
-# Test installation
+# Test CLI installation
 xorlang --version
+xorlang --help
+
+# Test IDE installation
 xorlang-ide
+
+# Test file association (if desktop integration enabled)
+# Create test file and double-click to open in IDE
+echo 'print("Hello, XorLang!");' > test.xor
+```
+
+### Uninstallation
+
+```bash
+# Using the dedicated uninstaller (recommended)
+sudo ./uninstall_xorlang.sh
+
+# Preview what will be removed
+sudo ./uninstall_xorlang.sh --dry-run
+
+# Force removal without prompts
+sudo ./uninstall_xorlang.sh --force
 ```
 
 ## Quick Start
@@ -598,9 +641,15 @@ python3 src/xorlang/cli.py tests/test_math.xor
 - **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ### 🛠️ Installation & Management
+- **Build from Source**: `python build.py` - Creates PyInstaller executables in `dist/`
 - **Enhanced Installer**: `sudo ./install_to_opt.sh` - Automated installation with desktop integration
-- **Uninstaller**: `sudo ./uninstall_xorlang.sh` - Complete removal with backup options
-- **Build Script**: `python build.py` - Build executables from source
+  - Installs to `/opt/xorlang/` with symlinks in `/usr/local/bin/`
+  - Creates desktop entries, MIME types, and icon support
+  - Options: `--force`, `--verbose`, `--skip-backup`, `--help`
+- **Complete Uninstaller**: `sudo ./uninstall_xorlang.sh` - Safe removal with backup options
+  - Removes all files, desktop entries, and system integration
+  - Options: `--dry-run`, `--force`, `--no-backup`, `--verbose`, `--help`
+  - Creates backup before removal for safety
 
 ### 🔗 External Links
 - **[GitHub Repository](https://github.com/Mr-Ali-Jafari/Xorlang)** - Source code and development

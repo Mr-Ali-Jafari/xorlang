@@ -1,6 +1,6 @@
 # XorLang Installation Guide
 
-Complete installation guide for XorLang Programming Language v2.1.0 with IDE support.
+Complete installation guide for XorLang Programming Language v2.1.0 with comprehensive IDE support, desktop integration, and professional tooling.
 
 ## Table of Contents
 
@@ -41,15 +41,52 @@ XorLang offers two installation methods:
 
 ### Method 1: Enhanced Installer (Recommended)
 
-The enhanced installer provides automatic installation with desktop integration, icon support, and comprehensive logging.
+The enhanced installer (`install_to_opt.sh` v2.1.0) provides:
+- **Automatic installation** with comprehensive error handling
+- **Desktop integration** with file associations and MIME types
+- **Icon support** using the custom XorLang icon (`X.ico`)
+- **Comprehensive logging** with timestamped logs in `/tmp/`
+- **Backup functionality** for existing installations
+- **System validation** including disk space and dependency checks
 
 ```bash
 # Navigate to XorLang directory
 cd /path/to/xorlang
 
+# Build executables first (if not already built)
+python build.py
+
 # Run the enhanced installer
 sudo ./install_to_opt.sh
 ```
+
+#### What the Enhanced Installer Does
+
+1. **System Requirements Check**
+   - Verifies root privileges (sudo)
+   - Checks available disk space (minimum 100MB)
+   - Validates required system commands
+
+2. **Source File Validation**
+   - Confirms `dist/xorlang` and `dist/xorlang-ide` exist
+   - Verifies executables are not corrupted
+   - Checks for icon file `src/xorlang/X.ico`
+
+3. **Installation Process**
+   - Creates `/opt/xorlang/` directory
+   - Copies executables with proper permissions
+   - Creates symlinks in `/usr/local/bin/`
+   - Installs icon to `/usr/share/pixmaps/xorlang.ico`
+
+4. **Desktop Integration**
+   - Creates desktop entries for both CLI and IDE
+   - Sets up MIME types for `.xor` and `.xorlang` files
+   - Updates system databases for immediate recognition
+
+5. **Verification**
+   - Tests executable functionality
+   - Confirms all files are properly installed
+   - Provides installation summary with paths
 
 #### Installation Options
 
@@ -60,14 +97,41 @@ sudo ./install_to_opt.sh
 # Force reinstall over existing installation
 sudo ./install_to_opt.sh --force
 
-# Verbose installation with detailed output
+# Verbose installation with detailed debug output
 sudo ./install_to_opt.sh --verbose
 
-# Skip backup creation during reinstall
+# Skip backup creation during reinstall (faster)
 sudo ./install_to_opt.sh --skip-backup
 
-# Show help and all options
+# Force reinstall with verbose output (recommended for troubleshooting)
+sudo ./install_to_opt.sh --force --verbose
+
+# Show comprehensive help with all options
 ./install_to_opt.sh --help
+```
+
+#### Installation Locations
+
+The enhanced installer creates the following structure:
+
+```
+/opt/xorlang/
+├── xorlang          # CLI executable
+└── xorlang-ide      # IDE executable
+
+/usr/local/bin/
+├── xorlang -> /opt/xorlang/xorlang
+└── xorlang-ide -> /opt/xorlang/xorlang-ide
+
+/usr/share/pixmaps/
+└── xorlang.ico      # Application icon
+
+/usr/share/applications/
+├── xorlang.desktop      # CLI desktop entry
+└── xorlang-ide.desktop  # IDE desktop entry
+
+/usr/share/mime/packages/
+└── xorlang.xml      # MIME type definitions
 ```
 
 ### Method 2: From Release Package
@@ -95,11 +159,36 @@ If you prefer manual installation or need custom setup:
 git clone https://github.com/Mr-Ali-Jafari/Xorlang.git
 cd Xorlang
 
-# Install dependencies
+# Install Python dependencies
 pip install -r requirements.txt
 
-# Build executables
+# Build executables using PyInstaller
 python build.py
+```
+
+#### Build Process Details
+
+The `build.py` script:
+- Uses **PyInstaller** to create standalone executables
+- Builds both `xorlang` (CLI) and `xorlang-ide` (GUI) executables
+- Includes the **stdlib** (standard library) in the build
+- Creates executables in the `dist/` directory
+- Handles platform-specific optimizations for Linux
+- Includes the icon file (`X.ico`) for the IDE
+
+#### Build Requirements
+
+- **Python 3.8+** with pip
+- **PyInstaller** (installed via requirements.txt)
+- **Tkinter** (for IDE GUI) - usually included with Python
+- **Linux development tools** (gcc, make) - for some Python packages
+
+#### Expected Build Output
+
+```
+dist/
+├── xorlang          # CLI executable (~12-13MB)
+└── xorlang-ide      # IDE executable (~13-14MB)
 ```
 
 ### Step 2: Manual System Installation
@@ -226,35 +315,102 @@ The enhanced installer automatically sets up:
 
 ### Method 1: Enhanced Uninstaller (Recommended)
 
+The dedicated uninstaller (`uninstall_xorlang.sh` v2.1.0) provides:
+- **Complete removal** of all XorLang files and integration
+- **Safety features** with backup creation and confirmation prompts
+- **Dry-run mode** to preview what will be removed
+- **Comprehensive logging** with detailed removal tracking
+- **System cleanup** including database updates
+
 ```bash
 # Navigate to XorLang directory
 cd /path/to/xorlang
 
-# Run uninstaller
+# Run interactive uninstaller (recommended)
 sudo ./uninstall_xorlang.sh
 ```
+
+#### What the Uninstaller Removes
+
+The uninstaller completely removes:
+
+1. **Installation Directory**
+   - `/opt/xorlang/` (entire directory)
+
+2. **System Symlinks**
+   - `/usr/local/bin/xorlang`
+   - `/usr/local/bin/xorlang-ide`
+
+3. **Desktop Integration**
+   - `/usr/share/applications/xorlang.desktop`
+   - `/usr/share/applications/xorlang-ide.desktop`
+   - `/usr/share/mime/packages/xorlang.xml`
+
+4. **Visual Assets**
+   - `/usr/share/pixmaps/xorlang.ico`
+
+5. **Documentation** (if installed)
+   - `/usr/share/doc/xorlang/`
+   - `/usr/share/man/man1/xorlang.1`
+   - `/usr/share/man/man1/xorlang-ide.1`
+
+6. **System Database Updates**
+   - MIME database refresh
+   - Desktop database refresh
+   - Manual page database refresh
 
 #### Uninstaller Options
 
 ```bash
-# Interactive uninstallation (recommended)
+# Interactive uninstallation with confirmation prompts (recommended)
 sudo ./uninstall_xorlang.sh
 
-# Preview what will be removed (dry run)
+# Preview what will be removed without actually removing (safe)
 sudo ./uninstall_xorlang.sh --dry-run
 
-# Force removal without confirmation
+# Force removal without any confirmation prompts
 sudo ./uninstall_xorlang.sh --force
 
-# Skip backup creation
+# Skip backup creation (faster, but less safe)
 sudo ./uninstall_xorlang.sh --no-backup
 
-# Verbose uninstallation
+# Verbose uninstallation with detailed debug output
 sudo ./uninstall_xorlang.sh --verbose
 
-# Show help
+# Combine options for different scenarios
+sudo ./uninstall_xorlang.sh --force --verbose    # Fast removal with details
+sudo ./uninstall_xorlang.sh --dry-run --verbose  # Detailed preview
+
+# Show comprehensive help with all options
 ./uninstall_xorlang.sh --help
 ```
+
+#### Uninstaller Safety Features
+
+1. **Backup Creation**
+   - Creates backup in `/tmp/xorlang-uninstall-backup-YYYYMMDD-HHMMSS/`
+   - Preserves all removed files for recovery
+   - Can be disabled with `--no-backup`
+
+2. **Confirmation Prompts**
+   - Shows preview of what will be removed
+   - Requires explicit "yes" confirmation
+   - Can be bypassed with `--force`
+
+3. **Dry Run Mode**
+   - Shows exactly what would be removed
+   - No actual file removal performed
+   - Perfect for verification before real removal
+
+4. **Comprehensive Logging**
+   - Logs all actions to `/tmp/xorlang-uninstall-YYYYMMDD-HHMMSS.log`
+   - Tracks successful and failed removals
+   - Useful for troubleshooting
+
+5. **Verification**
+   - Confirms complete removal after uninstallation
+   - Reports any remaining files
+   - Provides final status summary
 
 ### Method 2: Manual Uninstallation
 
