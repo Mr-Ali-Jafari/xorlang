@@ -129,13 +129,7 @@ class Lexer:
             elif self.current_char in DIGITS:
                 tokens.append(self.make_number())
             elif self.current_char in LETTERS + '_':
-                tok = self.make_identifier_or_keyword()
-                if tok.type == TT_KEYWORD and tok.value == 'import':
-                    err = self.handle_import(tokens)
-                    if err:
-                        return [], err
-                else:
-                    tokens.append(tok)
+                tokens.append(self.make_identifier_or_keyword())
             elif self.current_char in '"\'':
                 tok_or_err = self.make_string()
                 if isinstance(tok_or_err, Exception):

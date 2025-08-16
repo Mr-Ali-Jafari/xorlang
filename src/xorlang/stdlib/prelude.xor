@@ -3,21 +3,10 @@
 
 // Import core modules
 var String = import("stdlib/string.xor");
-var IO = import("stdlib/io.xor");
-var Array = import("stdlib/array.xor");
+var Lists = import("stdlib/lists.xor");
 
-// Global input/output functions
-func input(prompt) {
-    return IO.input(prompt);
-}
-
-func print(value) {
-    IO.print(value);
-}
-
-func println(value) {
-    IO.println(value);
-}
+// Global input/output functions are already available as built-ins
+// print() and input() are built-in functions
 
 // Math class with basic functionality
 class Math {

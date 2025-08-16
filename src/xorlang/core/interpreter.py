@@ -209,18 +209,14 @@ class Interpreter:
             # Default to looking in the source package directory
             script_dir = os.path.dirname(os.path.abspath(__file__))
             self.stdlib_path = os.path.join(script_dir, '..', 'stdlib')
-            print(f"[DEBUG] Looking for stdlib in: {self.stdlib_path}")
         else:
             self.stdlib_path = stdlib_path
-            print(f"[DEBUG] Using provided stdlib path: {self.stdlib_path}")
             
         # Verify the path exists
         if not os.path.isdir(self.stdlib_path):
-            print(f"[DEBUG] Warning: Standard library path does not exist: {self.stdlib_path}")
             # Try looking in the project root
             project_root = os.path.abspath(os.path.join(script_dir, '..', '..'))
             self.stdlib_path = os.path.join(project_root, 'src', 'xorlang', 'stdlib')
-            print(f"[DEBUG] Trying alternate stdlib path: {self.stdlib_path}")
             
         self.error_handler = error_handler or self.report_error
 
@@ -231,9 +227,7 @@ class Interpreter:
         # Performance optimization: Pre-load stdlib to avoid repeated file I/O
         self._stdlib_cache = {}
         
-        print("[DEBUG] Installing builtins...")
         self._install_builtins()
-        print("[DEBUG] Loading standard library...")
         self._load_all_stdlib()
 
     def _install_builtins(self) -> None:
@@ -828,7 +822,22 @@ class Interpreter:
         if not self.stdlib_path or not os.path.isdir(self.stdlib_path):
             raise RuntimeError("Standard library path is not configured.")
 
-        module_path = os.path.join(self.stdlib_path, f"{module_name}.xor")
+        # Handle different import path formats
+        if module_name.startswith('stdlib/'):
+            # Remove 'stdlib/' prefix and construct path
+            relative_path = module_name[7:]  # Remove 'stdlib/'
+            # Check if the path already has .xor extension
+            if relative_path.endswith('.xor'):
+                module_path = os.path.join(self.stdlib_path, relative_path)
+            else:
+                module_path = os.path.join(self.stdlib_path, f"{relative_path}.xor")
+        else:
+            # Direct module name
+            # Check if the path already has .xor extension
+            if module_name.endswith('.xor'):
+                module_path = os.path.join(self.stdlib_path, module_name)
+            else:
+                module_path = os.path.join(self.stdlib_path, f"{module_name}.xor")
 
         if not os.path.isfile(module_path):
             raise RuntimeError(f"Import error: File '{module_name}' not found at '{module_path}'")
@@ -840,6 +849,38 @@ class Interpreter:
         except FileNotFoundError:
             # This should be caught by the isfile check, but as a fallback
             raise RuntimeError(f"Import error: File '{module_name}' not found at '{module_path}'")
+
+    def _eval_module(self, module_path: str, source_code: str) -> Any:
+        """Evaluate a module and return its exports."""
+        # Create a new environment for the module
+        module_env = Environment()
+        
+        # Parse the module source code
+        from .lexer import Lexer
+        from .parser import Parser
+
+        lexer = Lexer(module_path, source_code)
+        tokens, error = lexer.make_tokens()
+        if error:
+            raise RuntimeError(f"Lexer error in module {module_path}: {error.format_error()}")
+
+        parser = Parser(tokens)
+        ast = parser.parse()
+        if ast.error:
+            raise RuntimeError(f"Parser error in module {module_path}: {ast.error.format_error()}")
+
+        # Evaluate the module in its own environment
+        old_env = self.env
+        self.env = module_env
+        try:
+            if ast.node:
+                self.eval(ast.node)
+        finally:
+            # Restore original environment
+            self.env = old_env
+
+        # Return the module environment as the module object
+        return module_env
 
     def _eval_ThisNode(self, node: ThisNode, env: Environment) -> Any:
         """Evaluate 'this' keyword."""

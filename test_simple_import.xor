@@ -1,0 +1,4 @@
+print("Testing import functionality");
+
+var String = import("stdlib/string.xor");
+print("Import successful");

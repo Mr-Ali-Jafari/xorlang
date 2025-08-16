@@ -146,6 +146,8 @@ class Parser:
             return self._parse_break_statement()
         elif self.current_tok.matches(TT_KEYWORD, 'continue'):
             return self._parse_continue_statement()
+        elif self.current_tok.matches(TT_KEYWORD, 'import'):
+            return self._parse_import_statement()
         
         return self._parse_expression_statement()
 
@@ -164,6 +166,42 @@ class Parser:
         res.register_advancement()
         self.advance()
         return res.success(ContinueNode(tok))
+
+    def _parse_import_statement(self):
+        """Parse an import statement."""
+        res = ParseResult()
+        res.register_advancement()
+        self.advance()  # Consume 'import'
+
+        if self.current_tok.type != TT_LPAREN:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected '(' after 'import'"
+            ))
+
+        res.register_advancement()
+        self.advance()  # Consume '('
+
+        if self.current_tok.type != TT_STRING:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected string literal after import"
+            ))
+
+        module_name = self.current_tok
+        res.register_advancement()
+        self.advance()  # Consume string
+
+        if self.current_tok.type != TT_RPAREN:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ')' after import string"
+            ))
+
+        res.register_advancement()
+        self.advance()  # Consume ')'
+
+        return res.success(ImportNode(module_name))
 
     def _parse_return_statement(self):
         """Parse a return statement."""
@@ -760,6 +798,9 @@ class Parser:
         if tok.matches(TT_KEYWORD, 'new'):
             return self.new_expression()
 
+        if tok.matches(TT_KEYWORD, 'import'):
+            return self.import_expression()
+
         if tok.type == TT_IDENTIFIER:
             res.register_advancement()
             self.advance()
@@ -852,3 +893,39 @@ class Parser:
         self.advance()
 
         return res.success(NewNode(class_name_tok, arg_nodes))
+
+    def import_expression(self) -> ParseResult:
+        """Parse an import expression."""
+        res = ParseResult()
+        res.register_advancement()
+        self.advance()  # Consume 'import'
+
+        if self.current_tok.type != TT_LPAREN:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected '(' after 'import'"
+            ))
+
+        res.register_advancement()
+        self.advance()  # Consume '('
+
+        if self.current_tok.type != TT_STRING:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected string literal after import"
+            ))
+
+        module_name = self.current_tok
+        res.register_advancement()
+        self.advance()  # Consume string
+
+        if self.current_tok.type != TT_RPAREN:
+            return res.failure(ParseError(
+                self.current_tok.pos_start, self.current_tok.pos_end,
+                "Expected ')' after import string"
+            ))
+
+        res.register_advancement()
+        self.advance()  # Consume ')'
+
+        return res.success(ImportNode(module_name))

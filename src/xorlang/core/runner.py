@@ -73,9 +73,6 @@ def run_program(file_path: str, source: str, stdlib_path: Optional[str] = None) 
         A tuple containing the result of the execution (or None) and an error
         message (or None).
     """
-    print(f"[DEBUG] Running program from file: {file_path}")
-    print(f"[DEBUG] Using stdlib path: {stdlib_path}")
-    
     # 1. Initialize the interpreter
     interpreter = Interpreter(stdlib_path=stdlib_path)
 

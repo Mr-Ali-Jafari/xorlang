@@ -11,7 +11,6 @@ def main():
         sys.exit(1)
     
     filename = sys.argv[1]
-    print(f"[DEBUG] Running file: {filename}")
     result, error = run_file(filename)
     if error:
         print(f"Error: {error}")

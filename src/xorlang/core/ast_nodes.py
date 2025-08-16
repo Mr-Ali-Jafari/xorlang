@@ -350,3 +350,16 @@ class ClassDefNode(ASTNode):
     
     def __repr__(self):
         return f"class {self.name_tok.value} {{ {len(self.members)} members }}"
+
+
+class ImportNode(ASTNode):
+    """Represents import statements."""
+    
+    def __init__(self, module_name):
+        super().__init__()
+        self.module_name = module_name
+        self.pos_start = module_name.pos_start
+        self.pos_end = module_name.pos_end
+    
+    def __repr__(self):
+        return f"import({self.module_name.value})"
