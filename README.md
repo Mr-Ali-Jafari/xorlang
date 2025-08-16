@@ -634,11 +634,7 @@ python3 src/xorlang/cli.py tests/test_math.xor
 
 ### 📚 Complete Documentation
 - **[Installation Guide](INSTALLATION.md)** - Comprehensive installation instructions with troubleshooting
-- **[Linux Installation Guide](INSTALL_LINUX.md)** - Detailed Linux-specific installation steps
-- **[Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)** - Performance tuning and optimization guide
 - **[Import System Guide](IMPORT_SYSTEM_GUIDE.md)** - Module and import system documentation
-- **[Installer Guide](INSTALLER_GUIDE.md)** - Building and packaging instructions
-- **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ### 🛠️ Installation & Management
 - **Build from Source**: `python build.py` - Creates PyInstaller executables in `dist/`
