@@ -1,0 +1,31 @@
+// XorLang GUI Standard Library
+// Provides a simple, object-oriented API for creating graphical user interfaces.
+
+class Window {
+    func init(title, width, height) {
+        this.id = null; // Initialize id here
+        this.id = gui_create_window(title, width, height);
+        if (this.id == null) {
+            print("Error: Failed to create GUI window.");
+        }
+    }
+
+    // Adds a text label to the window at the specified coordinates.
+    func addLabel(text, x, y) {
+        if (this.id == null) { return; };
+        gui_add_label(this.id, text, x, y);
+    }
+
+    // Adds a button to the window with a callback function to execute on click.
+    func addButton(text, x, y, callback) {
+        if (this.id == null) { return; };
+        gui_add_button(this.id, text, x, y, callback);
+    }
+
+    // Displays the window and starts the GUI event loop.
+    // This is a blocking call and will run until the window is closed.
+    func show() {
+        if (this.id == null) { return; };
+        gui_show_window(this.id);
+    }
+}

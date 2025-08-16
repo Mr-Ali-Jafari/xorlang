@@ -1,0 +1,229 @@
+// XorLang Standard Library - Lists
+// Version 2.0.0 - Corrected Syntax
+
+// Dynamic List
+class List {
+    func init() {
+        this.items = new Array();
+    }
+
+    func push(item) {
+        this.items.push(item);
+    }
+
+    func pop() {
+        return this.items.pop();
+    }
+
+    func get(index) {
+        return this.items.get(index);
+    }
+
+    func set(index, value) {
+        this.items.set(index, value);
+    }
+
+    func size() {
+        return this.items.length();
+    }
+
+    func length() {
+        return this.items.length();
+    }
+
+    func indexOf(item) {
+        var i = 0;
+        while (i < this.items.length()) {
+            if (this.items.get(i) == item) {
+                return i;
+            }
+            i = i + 1;
+        }
+        return -1;
+    }
+
+    func removeAt(index) {
+        return this.items.removeAt(index);
+    }
+
+    func clear() {
+        this.items.clear();
+    }
+
+    func isEmpty() {
+        return this.items.length() == 0;
+    }
+}
+
+// Stack (LIFO)
+class Stack {
+    func init() {
+        this.items = new Array();
+    }
+
+    func push(item) {
+        var arr = this.items; arr.push(item);
+    }
+
+    func pop() {
+        var arr = this.items; return arr.pop();
+    }
+
+    func peek() {
+        var arr = this.items;
+        if (arr.length() == 0) {
+            return null;
+        }
+        return arr.get(arr.length() - 1);
+    }
+
+    func size() {
+        var arr = this.items; return arr.length();
+    }
+
+    func isEmpty() {
+        var arr = this.items; return arr.length() == 0;
+    }
+
+    func clear() {
+        var arr = this.items; arr.clear();
+    }
+}
+
+// Queue (FIFO)
+class Queue {
+    func init() {
+        this.items = new Array();
+    }
+
+    func enqueue(item) {
+        var arr = this.items; arr.push(item);
+    }
+
+    func dequeue() {
+        var arr = this.items; 
+        if (arr.length() == 0) {
+            return null;
+        }
+        return arr.removeAt(0);
+    }
+
+    func peek() {
+        var arr = this.items; 
+        if (arr.length() == 0) {
+            return null;
+        }
+        return arr.get(0);
+    }
+
+    func front() {
+        var arr = this.items; 
+        if (arr.length() == 0) {
+            return null;
+        }
+        return arr.get(0);
+    }
+
+    func size() {
+        var arr = this.items; return arr.length();
+    }
+
+    func isEmpty() {
+        var arr = this.items; return arr.length() == 0;
+    }
+
+    func clear() {
+        var arr = this.items; arr.clear();
+    }
+}
+
+// Map (Dictionary)
+class Map {
+    func init() {
+        this.keys = new Array();
+        this.values = new Array();
+    }
+
+    func set(key, value) {
+        var arr_keys = this.keys; 
+        var index = arr_keys.indexOf(key);
+        if (index == -1) {
+            var arr_keys = this.keys; arr_keys.push(key);
+            var arr_values = this.values; arr_values.push(value);
+        } else {
+            var arr_values = this.values; arr_values.set(index, value);
+        }
+    }
+
+    func get(key) {
+        var arr_keys = this.keys; 
+        var index = arr_keys.indexOf(key);
+        if (index > -1) {
+            var arr_values = this.values; return arr_values.get(index);
+        }
+        return null;
+    }
+
+    func has(key) {
+        var arr_keys = this.keys; return arr_keys.indexOf(key) > -1;
+    }
+
+    func delete(key) {
+        var arr_keys = this.keys; 
+        var index = arr_keys.indexOf(key);
+        if (index > -1) {
+            var arr_keys = this.keys; arr_keys.removeAt(index);
+            var arr_values = this.values; arr_values.removeAt(index);
+        }
+    }
+
+    func size() {
+        var arr_keys = this.keys; return arr_keys.length();
+    }
+
+    func clear() {
+        var arr_keys = this.keys; arr_keys.clear();
+        var arr_values = this.values; arr_values.clear();
+    }
+}
+
+// Set
+class Set {
+    func init() {
+        this.items = new Array();
+    }
+
+    func add(item) {
+        if (this.has(item) == false) {
+            var arr = this.items; arr.push(item);
+        }
+    }
+
+    func has(item) {
+        var arr = this.items; return arr.indexOf(item) > -1;
+    }
+
+    func remove(item) {
+        var arr = this.items; 
+        var index = arr.indexOf(item);
+        if (index > -1) {
+            var arr = this.items; arr.removeAt(index);
+        }
+    }
+
+    func delete(item) {
+        var arr = this.items; 
+        var index = arr.indexOf(item);
+        if (index > -1) {
+            var arr = this.items; arr.removeAt(index);
+        }
+    }
+
+    func size() {
+        var arr = this.items; return arr.length();
+    }
+
+    func clear() {
+        var arr = this.items; arr.clear();
+    }
+}

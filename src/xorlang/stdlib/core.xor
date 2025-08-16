@@ -1,0 +1,59 @@
+// XorLang Core Library
+// Version 2.0.0 - Corrected Syntax
+
+import "lists.xor";
+
+class EventEmitter {
+    func init() {
+        this.listeners = new Map();
+    }
+
+    func on(event, callback) {
+        var map = this.listeners;
+        if (map.has(event) == false) {
+            map.set(event, new List());
+        }
+        var list = map.get(event);
+        list.push(callback);
+    }
+
+    func emit(event, data) {
+        var map = this.listeners;
+        if (map.has(event)) {
+            var eventListeners = map.get(event);
+            var i = 0;
+            while (i < eventListeners.size()) {
+                var callback = eventListeners.get(i);
+                callback(data);
+                i = i + 1;
+            }
+        }
+    }
+
+    func off(event, callback) {
+        var map = this.listeners;
+        if (map.has(event)) {
+            var eventListeners = map.get(event);
+            var index = eventListeners.indexOf(callback);
+            if (index > -1) {
+                eventListeners.removeAt(index);
+            }
+        }
+    }
+
+    func removeAllListeners(event) {
+        var map = this.listeners;
+        if (map.has(event)) {
+            map.delete(event);
+        }
+    }
+
+    func listenerCount(event) {
+        var map = this.listeners;
+        if (map.has(event)) {
+            var eventListeners = map.get(event);
+            return eventListeners.size();
+        }
+        return 0;
+    }
+}

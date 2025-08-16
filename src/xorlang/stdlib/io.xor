@@ -1,0 +1,19 @@
+// XorLang IO Standard Library
+// Input/Output utilities using built-in functions.
+
+class IO {
+    func input(prompt) {
+        if (prompt != null) {
+            print(prompt);
+        }
+        return __input__();  // Built-in function for reading user input
+    }
+
+    func print(value) {
+        print(String.toString(value));
+    }
+
+    func println(value) {
+        print(String.toString(value) + "\n");
+    }
+}

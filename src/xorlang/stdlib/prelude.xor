@@ -1,0 +1,104 @@
+// Minimal XorLang Standard Prelude
+// Core mathematical and utility functions
+
+// Import core modules
+var String = import("stdlib/string.xor");
+var IO = import("stdlib/io.xor");
+var Array = import("stdlib/array.xor");
+
+// Global input/output functions
+func input(prompt) {
+    return IO.input(prompt);
+}
+
+func print(value) {
+    IO.print(value);
+}
+
+func println(value) {
+    IO.println(value);
+}
+
+// Math class with basic functionality
+class Math {
+  // Constants as methods to simulate static members
+  func PI() { return 3.141592653589793; }
+  func E() { return 2.718281828459045; }
+  
+  // Basic arithmetic
+  func add(a, b) { return a + b; }
+  func sub(a, b) { return a - b; }
+  func mul(a, b) { return a * b; }
+  func div(a, b) { 
+    if (b == 0) {
+      print("Error: Division by zero");
+      return null;
+    }
+    return a / b; 
+  }
+  
+  // Math functions
+  func abs(x) {
+    if (x < 0) { return -x; };
+    return x;
+  }
+  
+  func sqrt(x) {
+    if (x < 0) {
+      print("Error: Cannot take square root of negative number");
+      return null;
+    }
+    return __math_sqrt(x);
+  }
+  
+  func pow(x, y) {
+    return __math_pow(x, y);
+  }
+  
+  func sin(x) { return __math_sin(x); }
+  func cos(x) { return __math_cos(x); }
+  func tan(x) { return __math_tan(x); }
+  func floor(x) { return __math_floor(x); }
+  func ceil(x) { return __math_ceil(x); }
+  func round(x) { return __math_round(x); }
+  func random() { return __math_random(); }
+}
+
+// Time utilities
+class Time {
+  func now() { return time_now(); }
+  func nowMs() { return time_ms(); }
+  func wait(seconds) { sleep(seconds); }
+}
+
+// HTTP utilities
+class Http {
+  func get(url) { return http_get(url); }
+  func status(url) { return http_get_status(url); }
+}
+
+// File system utilities
+class File {
+  func exists(path) {
+    return __file_exists(path);
+  }
+  
+  func read(path) {
+    return __file_read(path);
+  }
+  
+  func write(path, content) {
+    return __file_write(path, content);
+  }
+}
+
+// Operating system utilities
+class Os {
+  func getenv(name) {
+    return __os_getenv(name);
+  }
+  
+  func listdir(path) {
+    return __os_listdir(path);
+  }
+}
