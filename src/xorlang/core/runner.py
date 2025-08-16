@@ -5,12 +5,31 @@ This module provides the main entry point for running XorLang programs.
 It coordinates the lexer, parser, and interpreter to execute source code.
 """
 
+import os
+import sys
 from typing import Tuple, Any, Optional
 
 from .lexer import run as lex_run
 from .parser import Parser
 from .interpreter import Interpreter
 from .errors import ReturnSignal
+
+
+def _find_stdlib_path() -> Optional[str]:
+    """Find the path to the standard library directory."""
+    # Path relative to this file (development setup)
+    here = os.path.dirname(os.path.abspath(__file__))
+    dev_path = os.path.join(here, '..', 'stdlib')
+    if os.path.isdir(dev_path):
+        return dev_path
+
+    # Path for PyInstaller bundles
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        bundle_path = os.path.join(sys._MEIPASS, 'stdlib')
+        if os.path.isdir(bundle_path):
+            return bundle_path
+
+    return None
 
 def run_file(file_path: str, stdlib_path: Optional[str] = None) -> Tuple[Optional[str], Optional[str]]:
     """
@@ -36,7 +55,8 @@ def run_interactive() -> None:
     """
     Start an interactive XorLang REPL (Read-Eval-Print Loop).
     """
-    interpreter = Interpreter()
+    stdlib_path = _find_stdlib_path()
+    interpreter = Interpreter(stdlib_path=stdlib_path)
     print("XorLang REPL (type 'exit' or press Ctrl+C to quit)")
     
     while True:
@@ -45,7 +65,7 @@ def run_interactive() -> None:
             if source.strip().lower() in ('exit', 'quit'):
                 break
                 
-            result, error = run_program('<stdin>', source)
+            result, error = run_program('<stdin>', source, stdlib_path)
             if error:
                 print(f"Error: {error}")
             elif result is not None:

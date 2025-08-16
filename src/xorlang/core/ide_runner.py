@@ -4,12 +4,30 @@ Handles input/output in the IDE environment.
 """
 
 import io
+import os
 import sys
 from typing import Tuple, Optional, Any
 from .lexer import Lexer
 from .parser import Parser
 from .interpreter import Interpreter
 from .errors import XorLangError, ReturnSignal
+
+def _find_stdlib_path() -> Optional[str]:
+    """Find the path to the standard library directory."""
+    # Path relative to this file (development setup)
+    here = os.path.dirname(os.path.abspath(__file__))
+    dev_path = os.path.join(here, '..', 'stdlib')
+    if os.path.isdir(dev_path):
+        return dev_path
+
+    # Path for PyInstaller bundles
+    if getattr(sys, 'frozen', False) and hasattr(sys, '_MEIPASS'):
+        bundle_path = os.path.join(sys._MEIPASS, 'stdlib')
+        if os.path.isdir(bundle_path):
+            return bundle_path
+
+    return None
+
 
 class IDERunner:
     def __init__(self, input_callback=None, output_callback=None):
@@ -48,8 +66,9 @@ class IDERunner:
         self._output_buffer.clear()
         
         try:
-            # Create interpreter with custom IO functions
-            interpreter = Interpreter()
+            # Create interpreter with custom IO functions and stdlib path
+            stdlib_path = _find_stdlib_path()
+            interpreter = Interpreter(stdlib_path=stdlib_path)
             
             # Override built-in print and input
             def builtin_print(*args):

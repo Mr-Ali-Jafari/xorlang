@@ -26,23 +26,33 @@ A modern, interpreted programming language designed for simplicity and expressiv
 
 ## Installation
 
-### Prerequisites
+XorLang provides multiple installation methods for Linux systems with comprehensive tooling and desktop integration.
 
-- Python 3.8 or higher
-- pip (Python package installer)
-
-### Install from Source
+### Quick Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/Mr-Ali-Jafari/Xorlang.git
 cd Xorlang
 
-# Install dependencies (if any)
-pip install -r requirements.txt
+# Run the enhanced installer
+sudo ./install_to_opt.sh
+```
 
-# Run XorLang
-python3 src/xorlang/cli.py
+### Installation Options
+
+- **Enhanced Installer** (Recommended) - Automated installation with desktop integration
+- **Manual Installation** - Step-by-step custom setup
+- **Release Packages** - Pre-built installer packages
+
+📖 **[Complete Installation Guide](INSTALLATION.md)** - Comprehensive installation documentation with troubleshooting
+
+### Quick Verification
+
+```bash
+# Test installation
+xorlang --version
+xorlang-ide
 ```
 
 ## Quick Start
@@ -577,9 +587,30 @@ python3 src/xorlang/cli.py tests/test_math.xor
 - Module system improvements
 - Performance optimizations
 
+## Documentation & Resources
+
+### 📚 Complete Documentation
+- **[Installation Guide](INSTALLATION.md)** - Comprehensive installation instructions with troubleshooting
+- **[Linux Installation Guide](INSTALL_LINUX.md)** - Detailed Linux-specific installation steps
+- **[Performance Optimizations](PERFORMANCE_OPTIMIZATIONS.md)** - Performance tuning and optimization guide
+- **[Import System Guide](IMPORT_SYSTEM_GUIDE.md)** - Module and import system documentation
+- **[Installer Guide](INSTALLER_GUIDE.md)** - Building and packaging instructions
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
+
+### 🛠️ Installation & Management
+- **Enhanced Installer**: `sudo ./install_to_opt.sh` - Automated installation with desktop integration
+- **Uninstaller**: `sudo ./uninstall_xorlang.sh` - Complete removal with backup options
+- **Build Script**: `python build.py` - Build executables from source
+
+### 🔗 External Links
+- **[GitHub Repository](https://github.com/Mr-Ali-Jafari/Xorlang)** - Source code and development
+- **[Issues](https://github.com/Mr-Ali-Jafari/Xorlang/issues)** - Bug reports and feature requests
+- **[Discussions](https://github.com/Mr-Ali-Jafari/Xorlang/discussions)** - Community discussions and support
+- **[Releases](https://github.com/Mr-Ali-Jafari/Xorlang/releases)** - Download pre-built packages
+
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Author
 
@@ -590,7 +621,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Inspired by modern programming languages
 - Built with Python for cross-platform compatibility
 - Community contributions and feedback
+- Enhanced tooling with comprehensive installer/uninstaller system
 
 ---
 
-**XorLang v2.0.0** - A modern programming language for the future.
+**XorLang v2.1.0** - A modern programming language with comprehensive tooling.

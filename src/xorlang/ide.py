@@ -9,6 +9,11 @@ import sys
 import os
 import tkinter as tk
 from tkinter import ttk, scrolledtext, filedialog, messagebox, simpledialog
+import threading
+import time
+import queue
+import gc
+from concurrent.futures import ThreadPoolExecutor, TimeoutError as FutureTimeoutError
 
 # Add the project root to the Python path
 # This is necessary for the executable to find the 'xorlang' package
@@ -33,8 +38,19 @@ class XorLangIDE:
             input_callback=self.get_input,
             output_callback=lambda text: self.append_output(text + "\n")
         )
+        
+        # Performance and crash prevention attributes
+        self.execution_thread = None
+        self.is_running = False
+        self.output_queue = queue.Queue()
+        self.executor = ThreadPoolExecutor(max_workers=1)
+        self.current_future = None
+        self.max_output_lines = 1000  # Limit output to prevent memory issues
+        self.execution_timeout = 30  # 30 second timeout for code execution
+        
         self.setup_ui()
         self.setup_menu()
+        self.setup_periodic_tasks()
     
     def setup_ui(self):
         """Set up the user interface."""
@@ -67,8 +83,17 @@ class XorLangIDE:
         button_frame = ttk.Frame(main_frame)
         button_frame.pack(fill=tk.X, pady=(5, 0))
         
-        ttk.Button(button_frame, text="Run", command=self.run_code).pack(side=tk.LEFT, padx=(0, 5))
-        ttk.Button(button_frame, text="Clear Output", command=self.clear_output).pack(side=tk.LEFT)
+        self.run_button = ttk.Button(button_frame, text="Run", command=self.run_code)
+        self.run_button.pack(side=tk.LEFT, padx=(0, 5))
+        
+        self.stop_button = ttk.Button(button_frame, text="Stop", command=self.stop_execution, state=tk.DISABLED)
+        self.stop_button.pack(side=tk.LEFT, padx=(0, 5))
+        
+        ttk.Button(button_frame, text="Clear Output", command=self.clear_output).pack(side=tk.LEFT, padx=(0, 5))
+        
+        # Progress bar for long-running operations
+        self.progress_bar = ttk.Progressbar(button_frame, mode='indeterminate')
+        self.progress_bar.pack(side=tk.RIGHT, padx=(5, 0))
     
     def setup_menu(self):
         """Set up the menu bar."""
@@ -99,6 +124,12 @@ class XorLangIDE:
         run_menu = tk.Menu(menubar, tearoff=0)
         menubar.add_cascade(label="Run", menu=run_menu)
         run_menu.add_command(label="Run Code", command=self.run_code, accelerator="F5")
+        run_menu.add_command(label="Stop Execution", command=self.stop_execution, accelerator="Ctrl+C")
+        
+        # Settings menu
+        settings_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Settings", menu=settings_menu)
+        settings_menu.add_command(label="Execution Settings...", command=self.show_settings)
         
         # Help menu
         help_menu = tk.Menu(menubar, tearoff=0)
@@ -111,6 +142,7 @@ class XorLangIDE:
         self.root.bind('<Control-s>', lambda e: self.save_file())
         self.root.bind('<Control-Shift-S>', lambda e: self.save_as_file())
         self.root.bind('<F5>', lambda e: self.run_code())
+        self.root.bind('<Control-c>', lambda e: self.stop_execution())
     
     def new_file(self):
         """Create a new file."""
@@ -184,26 +216,162 @@ class XorLangIDE:
         else:
             self.root.title("XorLang IDE - Untitled")
     
+    def setup_periodic_tasks(self):
+        """Set up periodic tasks for monitoring execution and updating UI."""
+        self.check_execution_status()
+        self.process_output_queue()
+    
+    def check_execution_status(self):
+        """Check if execution is complete and update UI accordingly."""
+        if self.current_future:
+            try:
+                # Check if future is done
+                if self.current_future.done():
+                    result, error = self.current_future.result(timeout=0.1)
+                    self.execution_finished(result, error)
+                else:
+                    # Check for timeout
+                    if hasattr(self, 'execution_start_time'):
+                        elapsed = time.time() - self.execution_start_time
+                        if elapsed > self.execution_timeout:
+                            # Cancel the future and report timeout
+                            self.current_future.cancel()
+                            self.execution_finished(None, f"Execution timed out after {self.execution_timeout} seconds")
+            except FutureTimeoutError:
+                self.execution_finished(None, "Execution timed out")
+            except Exception as e:
+                self.execution_finished(None, f"Execution error: {str(e)}")
+        
+        # Schedule next check
+        self.root.after(100, self.check_execution_status)
+    
+    def process_output_queue(self):
+        """Process any pending output from the execution thread."""
+        try:
+            while True:
+                text, tag = self.output_queue.get_nowait()
+                self._append_output_safe(text, tag)
+        except queue.Empty:
+            pass
+        
+        # Schedule next check
+        self.root.after(50, self.process_output_queue)
+    
     def get_input(self, prompt=None):
         """Get input from user via dialog."""
-        return simpledialog.askstring("Input Required", prompt or "Enter input:")
+        if self.is_running:
+            # Use a thread-safe approach for input during execution
+            input_result = [None]
+            input_event = threading.Event()
+            
+            def get_input_main_thread():
+                try:
+                    input_result[0] = simpledialog.askstring("Input Required", prompt or "Enter input:")
+                except:
+                    input_result[0] = ""
+                input_event.set()
+            
+            self.root.after(0, get_input_main_thread)
+            input_event.wait(timeout=30)  # 30 second timeout for input
+            return input_result[0] or ""
+        else:
+            return simpledialog.askstring("Input Required", prompt or "Enter input:") or ""
         
     def run_code(self):
-        """Run the current code."""
+        """Run the current code asynchronously with timeout and crash protection."""
+        if self.is_running:
+            return
+        
         code = self.text_editor.get(1.0, tk.END + '-1c')
         if not code.strip():
             return
+        
+        # Start execution
+        self.is_running = True
+        self.run_button.config(state=tk.DISABLED)
+        self.stop_button.config(state=tk.NORMAL)
+        self.progress_bar.start()
         
         self.clear_output()
         self.append_output("Running XorLang code...\n", "info")
         
         filename = self.current_file or "<editor>"
-        result, error = self.runner.run_program(filename, code)
         
+        # Submit execution to thread pool with timeout
+        try:
+            self.execution_start_time = time.time()  # Record start time for timeout tracking
+            self.current_future = self.executor.submit(self._execute_code_safe, filename, code)
+        except Exception as e:
+            self.execution_finished(None, f"Failed to start execution: {str(e)}")
+    
+    def _execute_code_safe(self, filename, code):
+        """Execute code with comprehensive error handling and resource management."""
+        try:
+            # Create a new runner instance for each execution to prevent state pollution
+            runner = IDERunner(
+                input_callback=self.get_input,
+                output_callback=lambda text: self._queue_output(text + "\n")
+            )
+            
+            result, error = runner.run_program(filename, code)
+            return result, error
+            
+        except MemoryError:
+            return None, "Execution failed: Out of memory"
+        except KeyboardInterrupt:
+            return None, "Execution was interrupted"
+        except Exception as e:
+            return None, f"Unexpected error during execution: {str(e)}"
+        finally:
+            # Force garbage collection to free memory
+            gc.collect()
+    
+    def _queue_output(self, text, tag=None):
+        """Queue output for thread-safe UI updates."""
+        try:
+            self.output_queue.put((text, tag), timeout=1)
+        except queue.Full:
+            # If queue is full, skip this output to prevent blocking
+            pass
+    
+    def stop_execution(self):
+        """Stop the currently running code execution."""
+        if not self.is_running:
+            return
+        
+        if self.current_future:
+            self.current_future.cancel()
+            
+        # Force stop by recreating the executor
+        try:
+            self.executor.shutdown(wait=False)
+            self.executor = ThreadPoolExecutor(max_workers=1)
+        except:
+            pass
+        
+        self.execution_finished(None, "Execution stopped by user")
+    
+    def execution_finished(self, result, error):
+        """Handle completion of code execution."""
+        self.is_running = False
+        self.current_future = None
+        
+        # Clean up timeout tracking
+        if hasattr(self, 'execution_start_time'):
+            delattr(self, 'execution_start_time')
+        
+        # Update UI
+        self.run_button.config(state=tk.NORMAL)
+        self.stop_button.config(state=tk.DISABLED)
+        self.progress_bar.stop()
+        
+        # Display results
         if error:
             self.append_output(f"Error: {error}\n", "error")
         elif result is not None:
             self.append_output(f"Result: {result}\n", "success")
+        else:
+            self.append_output("Execution completed.\n", "info")
     
     def clear_output(self):
         """Clear the output area."""
@@ -212,35 +380,167 @@ class XorLangIDE:
         self.output_text.config(state=tk.DISABLED)
     
     def append_output(self, text, tag=None):
-        """Append text to the output area."""
-        self.output_text.config(state=tk.NORMAL)
-        self.output_text.insert(tk.END, text)
+        """Append text to the output area (thread-safe wrapper)."""
+        if threading.current_thread() == threading.main_thread():
+            self._append_output_safe(text, tag)
+        else:
+            self._queue_output(text, tag)
+    
+    def _append_output_safe(self, text, tag=None):
+        """Append text to the output area (main thread only)."""
+        try:
+            self.output_text.config(state=tk.NORMAL)
+            
+            # Limit output lines to prevent memory issues
+            current_lines = int(self.output_text.index(tk.END).split('.')[0]) - 1
+            if current_lines > self.max_output_lines:
+                # Remove oldest lines
+                lines_to_remove = current_lines - self.max_output_lines + 100
+                self.output_text.delete(1.0, f"{lines_to_remove}.0")
+            
+            self.output_text.insert(tk.END, text)
+            
+            if tag:
+                start = self.output_text.index(tk.END + f'-{len(text)}c')
+                end = self.output_text.index(tk.END + '-1c')
+                self.output_text.tag_add(tag, start, end)
+            
+            self.output_text.config(state=tk.DISABLED)
+            self.output_text.see(tk.END)
+            
+            # Configure tags for different message types
+            self.output_text.tag_config("error", foreground="red")
+            self.output_text.tag_config("success", foreground="green")
+            self.output_text.tag_config("info", foreground="blue")
+            
+        except tk.TclError:
+            # Handle case where widget is destroyed
+            pass
+    
+    def show_settings(self):
+        """Show settings dialog for execution parameters."""
+        settings_window = tk.Toplevel(self.root)
+        settings_window.title("Execution Settings")
+        settings_window.geometry("400x300")
+        settings_window.transient(self.root)
+        settings_window.grab_set()
         
-        if tag:
-            start = self.output_text.index(tk.END + f'-{len(text)}c')
-            end = self.output_text.index(tk.END + '-1c')
-            self.output_text.tag_add(tag, start, end)
+        # Center the window
+        settings_window.geometry("+%d+%d" % (self.root.winfo_rootx() + 50, self.root.winfo_rooty() + 50))
         
-        self.output_text.config(state=tk.DISABLED)
-        self.output_text.see(tk.END)
+        frame = ttk.Frame(settings_window, padding=10)
+        frame.pack(fill=tk.BOTH, expand=True)
         
-        # Configure tags for different message types
-        self.output_text.tag_config("error", foreground="red")
-        self.output_text.tag_config("success", foreground="green")
-        self.output_text.tag_config("info", foreground="blue")
+        # Timeout setting
+        ttk.Label(frame, text="Execution Timeout (seconds):").pack(anchor=tk.W, pady=(0, 5))
+        timeout_var = tk.StringVar(value=str(self.execution_timeout))
+        timeout_entry = ttk.Entry(frame, textvariable=timeout_var, width=10)
+        timeout_entry.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Max output lines setting
+        ttk.Label(frame, text="Maximum Output Lines:").pack(anchor=tk.W, pady=(0, 5))
+        lines_var = tk.StringVar(value=str(self.max_output_lines))
+        lines_entry = ttk.Entry(frame, textvariable=lines_var, width=10)
+        lines_entry.pack(anchor=tk.W, pady=(0, 10))
+        
+        # Info text
+        info_text = tk.Text(frame, height=6, wrap=tk.WORD, state=tk.DISABLED)
+        info_text.pack(fill=tk.BOTH, expand=True, pady=(10, 10))
+        
+        info_content = (
+            "Performance Settings:\n\n"
+            "• Execution Timeout: Maximum time (in seconds) before stopping code execution.\n"
+            "• Maximum Output Lines: Limit output to prevent memory issues with large outputs.\n\n"
+            "These settings help prevent crashes and improve performance when running complex code."
+        )
+        
+        info_text.config(state=tk.NORMAL)
+        info_text.insert(1.0, info_content)
+        info_text.config(state=tk.DISABLED)
+        
+        # Buttons
+        button_frame = ttk.Frame(frame)
+        button_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        def apply_settings():
+            try:
+                new_timeout = int(timeout_var.get())
+                new_lines = int(lines_var.get())
+                
+                if new_timeout < 1 or new_timeout > 300:
+                    raise ValueError("Timeout must be between 1 and 300 seconds")
+                if new_lines < 100 or new_lines > 10000:
+                    raise ValueError("Max lines must be between 100 and 10000")
+                
+                self.execution_timeout = new_timeout
+                self.max_output_lines = new_lines
+                
+                messagebox.showinfo("Settings", "Settings applied successfully!")
+                settings_window.destroy()
+                
+            except ValueError as e:
+                messagebox.showerror("Invalid Input", str(e))
+        
+        ttk.Button(button_frame, text="Apply", command=apply_settings).pack(side=tk.RIGHT, padx=(5, 0))
+        ttk.Button(button_frame, text="Cancel", command=settings_window.destroy).pack(side=tk.RIGHT)
     
     def show_about(self):
         """Show about dialog."""
         messagebox.showinfo(
             "About XorLang IDE",
             f"XorLang IDE {__version__}\n\n"
-            "A simple IDE for XorLang development.\n\n"
+            "A robust IDE for XorLang development with:\n"
+            "• Asynchronous code execution\n"
+            "• Timeout protection\n"
+            "• Memory management\n"
+            "• Crash prevention\n\n"
             "Visit: https://github.com/Mr-Ali-Jafari/Xorlang"
         )
     
     def run(self):
         """Start the IDE."""
-        self.root.mainloop()
+        # Set up proper cleanup on window close
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
+        
+        try:
+            self.root.mainloop()
+        except KeyboardInterrupt:
+            self.cleanup_resources()
+    
+    def on_closing(self):
+        """Handle IDE closing with proper cleanup."""
+        if self.is_running:
+            if messagebox.askokcancel("Quit", "Code is still running. Stop execution and quit?"):
+                self.stop_execution()
+                self.cleanup_resources()
+                self.root.destroy()
+        else:
+            self.cleanup_resources()
+            self.root.destroy()
+    
+    def cleanup_resources(self):
+        """Clean up resources before shutting down."""
+        try:
+            if self.is_running:
+                self.stop_execution()
+            
+            # Shutdown executor
+            if hasattr(self, 'executor'):
+                self.executor.shutdown(wait=False)
+            
+            # Clear queues
+            if hasattr(self, 'output_queue'):
+                try:
+                    while True:
+                        self.output_queue.get_nowait()
+                except queue.Empty:
+                    pass
+            
+            # Force garbage collection
+            gc.collect()
+            
+        except Exception as e:
+            print(f"Error during cleanup: {e}")
 
 
 def main():

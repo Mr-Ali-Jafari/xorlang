@@ -13,7 +13,7 @@ ENTRY_POINT = os.path.join("src", "xorlang", "cli.py")
 STDLIB_PATH = os.path.join("src", "xorlang", "stdlib")
 
 
-ICON = os.path.join("src", "xorlang", "x.ico")
+ICON = os.path.join("src", "xorlang", "X.ico")
 
 
 def get_build_os():
@@ -36,14 +36,14 @@ def main():
         return
 
     # PyInstaller uses ';' as a path separator on Windows, and ':' on other systems.
-    path_separator = ';' if build_os == 'win' else ':'
+
 
     # --- Build CLI (Console App) ---
     cli_options = [
         '--name=%s' % APP_NAME,
         '--onefile',
         '--console',
-        f'--add-data={STDLIB_PATH}{path_separator}xorlang/stdlib',
+        f'--add-data={STDLIB_PATH}:stdlib',
         f'--icon={ICON}',
         ENTRY_POINT,
     ]
@@ -63,7 +63,7 @@ def main():
         '--name=%s' % ide_app_name,
         '--onefile',
         '--windowed',  # Use --windowed for GUI apps
-        f'--add-data={STDLIB_PATH}{path_separator}xorlang/stdlib',
+        f'--add-data={STDLIB_PATH}:stdlib',
         ide_entry_point,
     ]
 

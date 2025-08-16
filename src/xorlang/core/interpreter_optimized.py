@@ -634,6 +634,13 @@ class OptimizedInterpreter:
 
     def _find_stdlib_file(self, filename):
         """Finds the path to a standard library file."""
+        # Use the configured stdlib_path if available
+        if self.stdlib_path and os.path.isdir(self.stdlib_path):
+            stdlib_file_path = os.path.join(self.stdlib_path, filename)
+            if os.path.exists(stdlib_file_path):
+                return os.path.abspath(stdlib_file_path)
+        
+        # Fallback: Check relative to the interpreter file's location
         script_dir = os.path.dirname(__file__)
         stdlib_path = os.path.join(script_dir, '..', 'stdlib', filename)
         if os.path.exists(stdlib_path):
