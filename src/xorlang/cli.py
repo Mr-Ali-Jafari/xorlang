@@ -16,7 +16,7 @@ project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-from xorlang.core.runner import run_file, run_interactive, run_program
+from xorlang.core.runner import run_file, run_interactive, run_program, _find_stdlib_path
 from xorlang import __version__
 
 
@@ -59,11 +59,13 @@ def main() -> NoReturn:
     """Main entry point for the XorLang CLI."""
     parser = create_parser()
     args = parser.parse_args()
+
+    stdlib_path = _find_stdlib_path()
     
     try:
         if args.command:
             # Execute code from command line
-            result, error = run_program('<command>', args.command)
+            result, error = run_program('<command>', args.command, stdlib_path=stdlib_path)
             if error:
                 print(error, file=sys.stderr)
                 sys.exit(1)
@@ -76,7 +78,7 @@ def main() -> NoReturn:
         
         else:
             # Execute file
-            result, error = run_file(args.file)
+            result, error = run_file(args.file, stdlib_path=stdlib_path)
             if error:
                 print(error, file=sys.stderr)
                 sys.exit(1)
