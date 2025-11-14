@@ -1,14 +1,32 @@
-exec = xorlang
-sources = $(wildcard src/*.c)
-object = $(sources:.c=.o)
-flags = -g
+# Directories
+SRC   := src
+BUILD := build
 
+# Files
+EXEC    := xorlang
+SOURCES := $(wildcard $(SRC)/*.c)
+OBJECTS := $(patsubst $(SRC)/%.c, $(BUILD)/%.o, $(SOURCES))
 
-$(exec): $(object)
-	gcc $(object) $(flags) -lcurl -lm -o $(exec)
+# Compiler settings
+CC     := gcc
+CFLAGS := -g -Wall
+LIBS   := -lcurl -lm
 
-%.o: %.c
-	gcc -c $(flags) $< -o $@
+# Build rules
+$(EXEC): $(OBJECTS)
+	$(CC) $(OBJECTS) $(CFLAGS) $(LIBS) -o $@
 
+# Rule for building object files in build directory
+$(BUILD)/%.o: $(SRC)/%.c | $(BUILD)
+	$(CC) -c $(CFLAGS) $< -o $@
+
+# Ensure build directory exists
+$(BUILD):
+	mkdir -p $(BUILD)
+
+# Clean targets
 clean:
-	rm -f $(object) $(exec) src/*.o *.c *.out
+	rm -f $(BUILD)/*.o
+
+clean-all: clean
+	rm -f $(EXEC)
